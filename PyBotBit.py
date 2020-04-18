@@ -33,7 +33,7 @@ async def on_message(message):
                 embed.set_author(name=dados['nome'], url=f'https://dolarhoje.com', icon_url=dados['imagem'])
                 embed.set_thumbnail(url=dados['imagem'])
                 embed.add_field(name='Valor', value=f'R$ {dados["preco"]}')
-                embed.set_footer(text=f'Fonte: {dados["fonte"]}\nPyPyBotBit © 2020 Wesley Dias', icon_url='https://avatars2.githubusercontent.com/u/56437612?s=88&u=c9ddcaa797c6a84031e4441c7f42fbc72ec6a4b1&v=4')
+                embed.set_footer(text=f'Fonte: {dados["fonte"]}\nPyBotBit © 2020 Wesley Dias', icon_url='https://avatars2.githubusercontent.com/u/56437612?s=88&u=c9ddcaa797c6a84031e4441c7f42fbc72ec6a4b1&v=4')
                 await message.channel.send(embed=embed)
 
             else:
