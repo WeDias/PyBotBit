@@ -608,7 +608,7 @@ def main() -> None:
 
     print(' PyBotBit Copyright © 2020 Wesley Dias '.rjust(120, '-'))
     print('PyBotBit status: [LIGANDO]', end='')
-    client.run('NzAxMTUyODQ4Mzk3NzI5ODMy.XptVxA.2M0SYNcrHH7EAz_FM49SmzHKS5g')
+    client.run('DIGITAR TOKEN DO BOT')
 
 
 if __name__ == '__main__':
