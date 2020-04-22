@@ -10,7 +10,7 @@ import PyBCoin
 import asyncio
 from datetime import datetime
 
-client: discord.Client
+client = discord.Client(max_messages=None)
 
 # ----------------------------------------------------------------------------------------------------------------------
 # funções referentes ao log
@@ -95,7 +95,7 @@ def ler_alertas_arq() -> list:
     ler_alertas_arq(): Serve para retornar uma lista com todos os alertas salvos
     :return: list, lista com todos os alertas salvos
     """
-    with open('Data/alertas', 'r') as arq:
+    with open('Data/Alertas', 'r') as arq:
         arq_alertas = arq.readlines()
     alertas = []
     for alerta in arq_alertas:
@@ -150,7 +150,7 @@ async def monitorar_alertas() -> None:
             del alertas[indice]
             log(f'Alerta {alerta} ativado e excluído com sucesso !')
             ativado += 1
-            with open('Data/alertas', 'w') as arq:
+            with open('Data/Alertas', 'w') as arq:
                 for arq_alerta in alertas:
                     arq.writelines(f'{str(arq_alerta[0])} {arq_alerta[1]} {arq_alerta[2]} {arq_alerta[3]}\n')
         indice += 1
@@ -222,7 +222,7 @@ async def criar_alerta(message: discord.Message) -> None:
             if alerta[3].find(','):
                 alerta[3] = alerta[3].replace(',', '.')
             valor = float(alerta[3])
-            with open('Data/alertas', 'a') as arq:
+            with open('Data/Alertas', 'a') as arq:
                 arq.writelines(f'{alerta[0]} {alerta[1]} {alerta[2]} {valor}\n')
             valor = PyBCoin.adicionar_pontos(valor)
             alerta[2] = nome_condicao(alerta[2])
@@ -273,7 +273,7 @@ async def remover_alerta(message: discord.Message) -> bool:
                     break
                 indice += 1
 
-            with open('Data/alertas', 'w') as arq:
+            with open('Data/Alertas', 'w') as arq:
                 for arq_alerta in alertas:
                     arq.writelines(f'{str(arq_alerta[0])} {arq_alerta[1]} {arq_alerta[2]} {arq_alerta[3]}\n')
             log(f'Alerta {remover[1][id_alerta]} removido com sucesso !')
@@ -581,8 +581,136 @@ async def noticias(message: discord.Message) -> None:
     await message.channel.send(f'{message.author.mention} Encontrei estas noticias para você', embed=embed)
 
 
+async def ping(message: discord.Message) -> None:
+    """
+    ping(): Serve para retornar a latência do bot
+    :return: None
+    """
+    embed = gerar_embed(title='Ping', color=0xdaa520)
+    embed.set_author(name='Devtools', icon_url='https://pngimage.net/wp-content/uploads/2018/05/engrenagem-png-3.png')
+    embed.set_thumbnail(url='https://pngimage.net/wp-content/uploads/2018/05/engrenagem-png-3.png')
+    embed.add_field(name='ping', value=f'{int(client.latency * 1000)} ms')
+    await message.channel.send(f'{message.author.mention} Este é meu ping no momento', embed=embed)
+    log(f'[{int(client.latency * 1000)} ms] Este é meu ping no momento')
+
 # ----------------------------------------------------------------------------------------------------------------------
-# Loop de eventos, main()
+# Loop de eventos
+
+
+@client.event
+async def on_ready() -> None:
+    """
+    on_ready(): Serve para criar um loop e executar tarefas quando o bot for iniciado com sucesso
+    :return: None
+    """
+    log_menu()
+    while True:
+        log('Monitorando alertas...', True)
+        await mudar_status('Verificando alertas', discord.Status.idle)
+        await monitorar_alertas()
+
+
+@client.event
+async def on_disconnect() -> None:
+    """
+    on_disconnect(): Serve para retornar se o bot foi desconectado
+    :return: None
+    """
+    log('PyBotBit foi desconectado', True)
+    input('Digite enter para religar o bot')
+    await client.run()
+
+
+@client.event
+async def on_member_join(member: discord.Member) -> None:
+    """
+    on_member_join(): Serve para verificar quando um novo usuário entrou e eniar mensagem de boas vindas
+    :param member: discord.Member, objeto member recebido quando o usuário entrou
+    :return: None
+    """
+    await gerar_dm(member)
+    text = f'{member.mention} Seja bem vindo ! Meu nome é PyBotBit sou um robô, fui criado para te ajudar!\nDigite `!ajuda`'
+    await member.dm_channel.send(text)
+
+
+@client.event
+async def on_message(message: discord.Message) -> None:
+    """
+    on_message(): Serve para obter mensagens enviadas pelos usuários e realizar tarefas a partir de comandos
+    :param message: objeto da mensagem recebida
+    :return: None
+    """
+    if message.author.id != client.user.id:
+        author = message.author
+        mensagem = message.content.lower()
+        criado = True
+        if mensagem.startswith('!'):
+            await message.add_reaction(emoji='\U0001F504')
+            log(f'Verificando comando enviado por: {author.name}, comando: {mensagem} ', True)
+            async with message.channel.typing():
+                if mensagem == '!ajuda':
+                    await mudar_status('Enviando ajuda', discord.Status.idle)
+                    await ajuda(message)
+
+                elif mensagem == '!alertas':
+                    await mudar_status('Enviando alertas', discord.Status.idle)
+                    await meus_alertas(author, True)
+
+                elif mensagem == '!pizza':
+                    await mudar_status('Enviando pizza', discord.Status.idle)
+                    await pizza(message)
+
+                elif mensagem == '!noticias':
+                    await mudar_status('Enviando notícias', discord.Status.idle)
+                    await noticias(message)
+
+                elif mensagem == '!limpar':
+                    await mudar_status('Limpando mensagens', discord.Status.idle)
+                    await limpar_mensagens(message)
+
+                elif mensagem == '!ping':
+                    await mudar_status('Enviando ping', discord.Status.idle)
+                    await ping(message)
+
+                elif mensagem.startswith('!alertar') and len(mensagem.split()) == 4 and PyBCoin.verificador(mensagem[1:].split()[1]):
+                    await mudar_status('Criando alerta', discord.Status.idle)
+                    await criar_alerta(message)
+
+                elif mensagem.startswith('!delalertar') and len(mensagem.split()) == 2:
+                    if not await remover_alerta(message):
+                        criado = False
+                else:
+                    try:
+                        if PyBCoin.verificador(mensagem[1:].split()[0]) and len(mensagem[1:].split()) == 1:
+                            await mudar_status('Buscando dados', discord.Status.idle)
+                            await dados_criptomoedas(message)
+
+                        elif PyBCoin.verificador(mensagem[1:].split()[0]) and len(mensagem[1:].split()) == 2:
+                            await mudar_status('Fazendo cálculos', discord.Status.idle)
+                            await calcular_criptomoeda(message)
+
+                        else:
+                            criado = False
+
+                    except IndexError:
+                        criado = False
+
+                    finally:
+                        if not criado:
+                            log('Não entendi o comando solicitado')
+                            await message.channel.send(f'{author.mention} Não entendi o seu comando `{message.content.lower()}`\nDigite `!ajuda` para conhecer os comandos disponíveis')
+
+        else:
+            log(f'Verificando mensagem enviada por: {author.name}', True)
+            log('A mensagem enviada não era para mim')
+
+        if criado and mensagem.startswith('!'):
+            await message.add_reaction(emoji='\U00002705')
+
+        elif not criado and mensagem.startswith('!'):
+            await message.add_reaction(emoji='\U0000274C')
+
+    await mudar_status('Online', discord.Status.online)
 
 
 def main() -> None:
@@ -590,118 +718,17 @@ def main() -> None:
     main(): Função principal do programa
     :return: None
     """
-    global client
-    client = discord.Client(max_messages=None)
-
-    @client.event
-    async def on_ready() -> None:
-        """
-        on_ready(): Serve para criar um loop e executar tarefas quando o bot for iniciado com sucesso
-        :return: None
-        """
-        log_menu()
-        while True:
-            log('Monitorando alertas...', True)
-            await mudar_status('Verificando alertas', discord.Status.idle)
-            await monitorar_alertas()
-
-    @client.event
-    async def on_disconnect() -> None:
-        """
-        on_disconnect(): Serve para retornar se o bot foi desconectado
-        :return: None
-        """
-        log('PyBotBit foi desconectado', True)
-
-    @client.event
-    async def on_member_join(member: discord.Member) -> None:
-        """
-        on_member_join(): Serve para verificar quando um novo usuário entrou e eniar mensagem de boas vindas
-        :param member: discord.Member, objeto member recebido quando o usuário entrou
-        :return: None
-        """
-        await gerar_dm(member)
-        text = f'{member.mention} Seja bem vindo ! Meu nome é PyBotBit sou um robô, fui criado para te ajudar!\nDigite `!ajuda`'
-        await member.dm_channel.send(text)
-
-    @client.event
-    async def on_message(message: discord.Message) -> None:
-        """
-        on_message(): Serve para obter mensagens enviadas pelos usuários e realizar tarefas a partir de comandos
-        :param message: objeto da mensagem recebida
-        :return: None
-        """
-        if message.author.id != client.user.id:
-            author = message.author
-            mensagem = message.content.lower()
-            criado = True
-            if mensagem.startswith('!'):
-                await message.add_reaction(emoji='\U0001F504')
-                log(f'Verificando comando enviado por: {author.name}, comando: {mensagem} ', True)
-                async with message.channel.typing():
-                    if mensagem == '!ajuda':
-                        await mudar_status('Enviando ajuda', discord.Status.idle)
-                        await ajuda(message)
-
-                    elif mensagem == '!alertas':
-                        await mudar_status('Enviando alertas', discord.Status.idle)
-                        await meus_alertas(author, True)
-
-                    elif mensagem == '!pizza':
-                        await mudar_status('Enviando pizza', discord.Status.idle)
-                        await pizza(message)
-
-                    elif mensagem == '!noticias':
-                        await mudar_status('Enviando notícias', discord.Status.idle)
-                        await noticias(message)
-
-                    elif mensagem == '!limpar':
-                        await mudar_status('Limpando mensagens', discord.Status.idle)
-                        await limpar_mensagens(message)
-
-                    elif mensagem.startswith('!alertar') and len(mensagem.split()) == 4 and PyBCoin.verificador(mensagem[1:].split()[1]):
-                        await mudar_status('Criando alerta', discord.Status.idle)
-                        await criar_alerta(message)
-
-                    elif mensagem.startswith('!delalertar') and len(mensagem.split()) == 2:
-                        if not await remover_alerta(message):
-                            criado = False
-                    else:
-                        try:
-                            if PyBCoin.verificador(mensagem[1:].split()[0]) and len(mensagem[1:].split()) == 1:
-                                await mudar_status('Buscando dados', discord.Status.idle)
-                                await dados_criptomoedas(message)
-
-                            elif PyBCoin.verificador(mensagem[1:].split()[0]) and len(mensagem[1:].split()) == 2:
-                                await mudar_status('Fazendo cálculos', discord.Status.idle)
-                                await calcular_criptomoeda(message)
-
-                            else:
-                                criado = False
-
-                        except IndexError:
-                            criado = False
-
-                        finally:
-                            if not criado:
-                                log('Não entendi o comando solicitado')
-                                await message.channel.send(f'{author.mention} Não entendi o seu comando `{message.content.lower()}`\nDigite `!ajuda` para conhecer os comandos disponíveis')
-
-            else:
-                log(f'Verificando mensagem enviada por: {author.name}', True)
-                log('A mensagem enviada não era para mim')
-
-            if criado and mensagem.startswith('!'):
-                await message.add_reaction(emoji='\U00002705')
-
-            elif not criado and mensagem.startswith('!'):
-                await message.add_reaction(emoji='\U0000274C')
-
-        await mudar_status('Online', discord.Status.online)
-
     print(' PyBotBit Copyright © 2020 Wesley Dias '.rjust(120, '-'))
     print('PyBotBit status: [LIGANDO]', end='')
-    client.run('DIGITAR TOKEN DO BOT')
+    with open('Data/Token', 'r') as token_arq:
+        token = token_arq.read()
+        token = token[token.find('=')+1:]
+
+    if token != '':
+        client.run(token)
+
+    else:
+        print('ERRO: Token inexistente, adicione o token do bot no arquivo Data/Token')
 
 
 if __name__ == '__main__':
