@@ -323,13 +323,79 @@ async def gerar_dm(author: int or discord.User) -> None:
 
 
 async def ajuda(message: discord.Message) -> None:
-    embed = gerar_embed(color=0x12BCEC, title='Informações sobre o PyBotBit')
+    embed = gerar_embed(color=0x12BCEC, title=':robot: Informações sobre o PyBotBit')
     embed.set_thumbnail(url='https://images.emojiterra.com/google/android-nougat/512px/2753.png')
     embed.set_author(name='PyBotBit ajuda', url='https://github.com/wedias', icon_url='https://images.emojiterra.com/google/android-nougat/512px/2753.png')
-    embed.add_field(name='Para que serve ?', value='PyBotBit é capaz de informar dados de preço e variação de qualquer criptomoeda listada no coinmarketcap, e informar o preço atual do dolar', inline=False)
-    embed.add_field(name='Como usar ?', value='Para utilizar digite no chat !nome-da-criptomoeda\nEx.: `!bitcoin`\nEntão o PyBotBit retornará dados sobre a criptomoeda escolhida\nNo exemplo utilizado acima retornaria dados do bitcoin', inline=False)
-    embed.add_field(name='Observação.', value='Caso o nome da criptomeda seja separado por espaço como por exemplo bitcoin cash\nFavor trocar os espaços por -\nEx: `!bitcoin-cash`', inline=False)
-    embed.add_field(name='GitHub', value='https://github.com/wedias', inline=False)
+
+    sobre = '''
+    PyBotBit é um robô/bot para o Discord com o foco no mundo das criptomoedas,
+    ele é capaz de informar dados de criptomoedas como: preço, variação,
+    criar alertas de preço, para não perder nenhuma oportunidade de compra/venda,
+    informar sobre notícias atuais relacionadas ao bitcoin e demais altcoins,
+    calcular quanto vale n criptomoedas em dólar e em reais,
+    Mostrar a cotação atual do dólar'''.replace('\n',  ' ')
+
+    comandos = '''
+    **Comandos de cotação**
+    
+    `!(criptomoeda)`
+    Retorna os dados atuais de determinada criptomoeda
+    Ex.: `!bitcoin`
+    
+    `!(criptomoeda) (quantidade)`
+    Retorna o valor de n criptomoedas em dólares e em reais
+    Ex.: `!ethereum 2`
+    -------------------------------------------------------------
+    **Comandos de alerta**
+    
+    `!alertas`
+    Retorna todos os alertas criados pelo usuário e suas IDs
+    
+    `!alertar (criptomoeda) (condição) (valor)`
+    Cria um alerta para uma criptomoeda, valor em USD
+    Ex.: `!alertar monero > 55`
+    Ex.: `!alertar litecoin < 42`
+    
+    `!delalertar (id)`
+    Deleta um alerta criado
+    -------------------------------------------------------------
+    **Outros comandos**
+    
+    `!limpar`
+    Apaga as mensagens trocadas entre o usuário e o bot
+    
+    `!ajuda`
+    Retorna uma mensagem com informações de ajuda
+    
+    `!noticias`
+    Retorna notícias sobre criptomoedas
+    
+    `!pizza`
+    Retorna o valor atual da pizza de 10.000 BTC
+    '''
+
+    obsevacao = '''
+    Caso o nome da criptomeda seja separado por espaço como por exemplo bitcoin cash
+    Favor trocar os espaços por `-` (hífen)
+    Ex: `!bitcoin-cash`
+    
+    O bot não é case sensitive, ou seja, ele não diferencia minúsculas de maiúsculas
+    BITCOIN, bitcoin, BiTCoiN etc... são válidos
+    
+    Para utilizar número decimais tanto faz se for delimitado por vírgula ou ponto
+    50,12 ou 50.12 são válidos
+    '''
+
+    desenvolvedor = '''
+    Código fonte: [disponível aqui](https://github.com/WeDias/PyBotBit)
+    Github: [@WeDias](https://github.com/WeDias/)
+    '''
+
+    embed.add_field(name='Sobre o PyBotBit', value=sobre, inline=False)
+    embed.add_field(name='Comandos válidos', value=comandos, inline=False)
+    embed.add_field(name='Observações', value=obsevacao, inline=False)
+    embed.add_field(name='Desenvolvedor', value=desenvolvedor, inline=False)
+
     await message.channel.send(f'{message.author.mention} Espero que isto possa te ajudar', embed=embed)
     log('Ajuda enviada com sucesso !')
 
@@ -510,16 +576,6 @@ def main() -> None:
     client = discord.Client(max_messages=None)
 
     @client.event
-    async def on_member_join(member: discord.Member) -> None:
-        """
-        :param member: discord.Member, objeto member recebido quando o usuário entrou
-        :return: None
-        """
-        await gerar_dm(member)
-        text = f'{member.mention} Seja bem vindo ! Meu nome é PyBotBit sou um robô, fui criado para te ajudar!\nDigite `!ajuda`'
-        await member.dm_channel.send(text)
-
-    @client.event
     async def on_ready() -> None:
         """
         on_ready(): Serve para criar um loop e executar tarefas quando o bot for iniciado com sucesso
@@ -530,6 +586,24 @@ def main() -> None:
             log('Monitorando alertas...', True)
             await mudar_status('Verificando alertas', discord.Status.idle)
             await monitorar_alertas()
+
+    @client.event
+    async def on_disconnect() -> None:
+        """
+        on_disconnect(): Serve para retornar se o bot foi desconectado
+        :return: None
+        """
+        log('PyBotBit foi desconectado', True)
+
+    @client.event
+    async def on_member_join(member: discord.Member) -> None:
+        """
+        :param member: discord.Member, objeto member recebido quando o usuário entrou
+        :return: None
+        """
+        await gerar_dm(member)
+        text = f'{member.mention} Seja bem vindo ! Meu nome é PyBotBit sou um robô, fui criado para te ajudar!\nDigite `!ajuda`'
+        await member.dm_channel.send(text)
 
     @client.event
     async def on_message(message: discord.Message) -> None:
@@ -566,7 +640,7 @@ def main() -> None:
                         await mudar_status('Limpando mensagens', discord.Status.idle)
                         await limpar_mensagens(message)
 
-                    elif mensagem.startswith('!alertar') and len(mensagem.split()) == 2:
+                    elif mensagem.startswith('!alertar') and len(mensagem.split()) == 4 and PyBCoin.verificador(mensagem[1:].split()[1]):
                         await mudar_status('Criando alerta', discord.Status.idle)
                         await criar_alerta(message)
 
