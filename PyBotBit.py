@@ -42,6 +42,7 @@ def log(mensagem: str, titulo: bool = False) -> None:
 
 def aptos(canais: bool = False, usuarios: bool = False) -> int:
     """
+    aptos(): Serve para retornar o número de canais ou usuário aptos a utilizar o bot
     :param canais: bool, se True retorna a quantidade de canais
     :param usuarios: bool, se True retorna a quantidade de usuários
     :return: int, quantidade de canais ou usuários
@@ -69,7 +70,7 @@ async def mudar_status(txt: str, status: discord.Status) -> None:
     :return: None
     """
     await client.change_presence(status=status, activity=discord.Game(name=txt))
-    await asyncio.sleep(0.5)
+    await asyncio.sleep(1)
 
 
 # ----------------------------------------------------------------------------------------------------------------------
@@ -78,6 +79,7 @@ async def mudar_status(txt: str, status: discord.Status) -> None:
 
 def nome_condicao(condicao: str) -> str:
     """
+    nome_condicao(): Serve para alterar uma string
     :param condicao: str, condição > ou <
     :return: str, nome da condição
     """
@@ -205,6 +207,7 @@ async def meus_alertas(author: int or discord.User, enviar: bool = True, enviar_
 
 async def criar_alerta(message: discord.Message) -> None:
     """
+    criar_alerta(): Serve para criar um alerta para o usuário
     :param message: discord.Message, objeto mensagem com os dados para gerar o alerta
     :return: None
     """
@@ -242,10 +245,10 @@ async def criar_alerta(message: discord.Message) -> None:
 async def remover_alerta(message: discord.Message) -> bool:
     """
     remover_alerta(): Serve para remover um alerta ativo do usuário
-    :type message: discord.Message, objeto mensagem enviado pelo usuário
+    :param message: discord.Message, objeto mensagem enviado pelo usuário
     :return: bool, True se o alerta foi removido com sucesso
     """
-    await client.change_presence(status=discord.Status.idle, activity=discord.Game(name='Calculando'))
+    await mudar_status('Removendo alerta', discord.Status.idle)
     author = message.author
     mensagem = message.content.lower()
     await gerar_dm(author)
@@ -324,6 +327,11 @@ async def gerar_dm(author: int or discord.User) -> None:
 
 
 async def ajuda(message: discord.Message) -> None:
+    """
+    ajuda(): Serve para retornar ao usuário uma mensagem de ajuda
+    :param message: discord.Message, objeto mensagem gerado pelo usuário
+    :return: None
+    """
     embed = gerar_embed(color=0x12BCEC, title=':robot: Informações sobre o PyBotBit')
     embed.set_thumbnail(url='https://images.emojiterra.com/google/android-nougat/512px/2753.png')
     embed.set_author(name='PyBotBit ajuda', url='https://github.com/wedias', icon_url='https://images.emojiterra.com/google/android-nougat/512px/2753.png')
@@ -525,7 +533,7 @@ async def calcular_criptomoeda(message: discord.Message) -> None:
 
 async def limpar_mensagens(message: discord.Message) -> None:
     """
-    limpar_mwnsagens(): Serve para limpar todas as mensagens trocados pelo bot e o usuário
+    limpar_mensagens(): Serve para limpar todas as mensagens trocados pelo bot e o usuário
     :param message: discord.Message, objeto message enviado pelo usuário
     :return: None
     """
@@ -555,6 +563,11 @@ async def limpar_mensagens(message: discord.Message) -> None:
 
 
 async def noticias(message: discord.Message) -> None:
+    """
+    noticias(): Serve para enviar algumas notícias sobre o mundo das criptomoedas
+    :param message: discord.Message, objeto mensagem gerado pelo usuário
+    :return: None
+    """
     embed = gerar_embed(color=0x7b68ee, title='Últimas notícias')
     embed.set_author(name='Notícias', url='https://www.criptofacil.com/ultimas-noticias/', icon_url='https://cdn3.iconfinder.com/data/icons/ballicons-reloaded-free/512/icon-70-512.png')
     embed.set_thumbnail(url='https://cdn3.iconfinder.com/data/icons/ballicons-reloaded-free/512/icon-70-512.png')
@@ -573,6 +586,10 @@ async def noticias(message: discord.Message) -> None:
 
 
 def main() -> None:
+    """
+    main(): Função principal do programa
+    :return: None
+    """
     global client
     client = discord.Client(max_messages=None)
 
@@ -599,6 +616,7 @@ def main() -> None:
     @client.event
     async def on_member_join(member: discord.Member) -> None:
         """
+        on_member_join(): Serve para verificar quando um novo usuário entrou e eniar mensagem de boas vindas
         :param member: discord.Member, objeto member recebido quando o usuário entrou
         :return: None
         """
