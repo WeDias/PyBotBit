@@ -93,12 +93,13 @@ def ler_alertas_arq() -> list:
     ler_alertas_arq(): Serve para retornar uma lista com todos os alertas salvos
     :return: list, lista com todos os alertas salvos
     """
-    with open('data/alertas', 'r') as arq:
+    with open('Data/alertas', 'r') as arq:
         arq_alertas = arq.readlines()
     alertas = []
     for alerta in arq_alertas:
-        dados = alerta.strip().split()
-        alertas.append(dados)
+        if alerta != '\n':
+            dados = alerta.strip().split()
+            alertas.append(dados)
     return alertas
 
 
@@ -147,7 +148,7 @@ async def monitorar_alertas() -> None:
             del alertas[indice]
             log(f'Alerta {alerta} ativado e excluído com sucesso !')
             ativado += 1
-            with open('data/alertas', 'w') as arq:
+            with open('Data/alertas', 'w') as arq:
                 for arq_alerta in alertas:
                     arq.writelines(f'{str(arq_alerta[0])} {arq_alerta[1]} {arq_alerta[2]} {arq_alerta[3]}\n')
         indice += 1
@@ -218,7 +219,7 @@ async def criar_alerta(message: discord.Message) -> None:
             if alerta[3].find(','):
                 alerta[3] = alerta[3].replace(',', '.')
             valor = float(alerta[3])
-            with open('data/alertas', 'a') as arq:
+            with open('Data/alertas', 'a') as arq:
                 arq.writelines(f'{alerta[0]} {alerta[1]} {alerta[2]} {valor}\n')
             valor = PyBCoin.adicionar_pontos(valor)
             alerta[2] = nome_condicao(alerta[2])
@@ -269,7 +270,7 @@ async def remover_alerta(message: discord.Message) -> bool:
                     break
                 indice += 1
 
-            with open('data/alertas', 'w') as arq:
+            with open('Data/alertas', 'w') as arq:
                 for arq_alerta in alertas:
                     arq.writelines(f'{str(arq_alerta[0])} {arq_alerta[1]} {arq_alerta[2]} {arq_alerta[3]}\n')
             log(f'Alerta {remover[1][id_alerta]} removido com sucesso !')
