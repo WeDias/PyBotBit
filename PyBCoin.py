@@ -59,6 +59,7 @@ def adicionar_pontos(numero: int or str or float) -> str:
 
 def remover_virgulas(string: str) -> str:
     """
+    remover_virgulas(): Serve para remover vírgulas de uma string
     :param string: string que terá suas vírgulas removidas
     :return: str, string sem vírgulas
     """
@@ -92,6 +93,7 @@ def verificador(criptomoeda: str) -> bool:
 
 def buscar_dados(criptomoeda: str) -> dict:
     """
+    buscar_dados(): Serve para buscar os dados de uma determionada criptomoeda
     :param criptomoeda: Nome da criptomoeda para buscar os dados
     :return: dicionário com os dados da criptomoeda
     """
@@ -171,6 +173,7 @@ def buscar_preco(criptomoeda: str) -> float:
 
 # ----------------------------------------------------------------------------------------------------------------------
 # funções referentes as noticias
+
 
 def ultimas_noticias() -> list:
     """
