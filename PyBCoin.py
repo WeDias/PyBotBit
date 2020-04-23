@@ -162,13 +162,23 @@ def buscar_preco(criptomoeda: str) -> float:
     :param criptomoeda: str, nome da criptomoeda para encontrar seu preço
     :return: float, preço atual da criptomoeda
     """
-    link = f'https://coinmarketcap.com/currencies/{criptomoeda}/'
+    preco = 0
     headers = {'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/80.0.3987.149 Safari/537.36'}
-    resposta = requests.get(link, headers=headers)
-    if resposta.status_code == 200:
+    if criptomoeda != 'dolar':
+        link = f'https://coinmarketcap.com/currencies/{criptomoeda}/'
+        resposta = requests.get(link, headers=headers)
+        if resposta.status_code == 200:
+            dados = BeautifulSoup(resposta.text, 'html.parser')
+            preco = dados.find(class_='cmc-details-panel-price__price').get_text()[1:]
+            preco = float(remover_virgulas(preco))
+    else:
+        link = 'https://dolarhoje.com/'
+        resposta = requests.get(link, headers=headers)
         dados = BeautifulSoup(resposta.text, 'html.parser')
-        preco = dados.find(class_='cmc-details-panel-price__price').get_text()[1:]
-        return float(remover_virgulas(preco))
+        preco = str(dados.find('span', class_='cotMoeda nacional').find('input'))
+        preco = float(preco[preco.find('value="') + 7:preco.rfind('"')].replace(',', '.'))
+
+    return preco
 
 
 # ----------------------------------------------------------------------------------------------------------------------

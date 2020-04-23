@@ -142,14 +142,21 @@ async def monitorar_alertas() -> None:
             author = client.get_user(int(alerta["user"]))
             await gerar_dm(author)
             alerta["cond"] = nome_condicao(alerta["cond"])
-            await author.dm_channel.send(f'{author.mention} :loudspeaker: Alerta disparado {alerta["moeda"]} {alerta["cond"]} USD {PyBCoin.adicionar_pontos(alerta["preco"])}')
+
+            sigla = 'USD'
+            if alerta["moeda"] == 'dolar':
+                sigla = 'BRL'
+
+            await author.dm_channel.send(f'{author.mention} :loudspeaker: Alerta disparado {alerta["moeda"]} {alerta["cond"]} {sigla} {PyBCoin.adicionar_pontos(alerta["preco"])}')
             await dados_criptomoedas(alerta["moeda"], int(alerta["user"]))
             del alertas[indice]
             dicionario["alertas"] = alertas
             log(f'Alerta {alerta} ativado e excluído com sucesso !')
+
             ativado += 1
             with open('Data/Alertas', 'w') as arq:
                 arq.write(json.dumps(dicionario))
+
         indice += 1
 
     log(f'({len(alertas)} alertas ativos) ({ativado} alertas disparados)')
@@ -184,12 +191,13 @@ async def meus_alertas(author: int or discord.User, enviar: bool = True, enviar_
         vazio = True
         for i, meu in enumerate(meus):
             vazio = False
-            if meu["cond"] == '<':
-                meu["cond"] = 'abaixo de'
+            meu["cond"] = nome_condicao(meu["cond"])
 
-            elif meu["cond"] == '>':
-                meu["cond"] = 'acima de'
-            embed.add_field(name=f':bell: Alerta (ID {i})', value=f'{meu["moeda"]} {meu["cond"]} USD {PyBCoin.adicionar_pontos(meu["preco"])}\n', inline=False)
+            sigla = 'USD'
+            if meu["moeda"] == 'dolar':
+                sigla = 'BRL'
+
+            embed.add_field(name=f':bell: Alerta (ID {i})', value=f'{meu["moeda"]} {meu["cond"]} {sigla} {PyBCoin.adicionar_pontos(meu["preco"])}\n', inline=False)
 
         if vazio:
             embed.add_field(name='Oops não encontrei nada por aqui !', value='Você não tem nenhum alerta ativo\nPara criar utilize `!alertar (criptomoeda) (condição) (valor)`')
@@ -217,7 +225,7 @@ async def criar_alerta(message: discord.Message) -> None:
     alerta[0] = author.id
     meus = await meus_alertas(author, False)
     if meus[0] < 10:
-        if verificar_alerta(alerta):
+        if verificar_alerta(alerta) and alerta[1]:
             if alerta[3].find(','):
                 alerta[3] = alerta[3].replace(',', '.')
             valor = float(alerta[3])
@@ -232,9 +240,16 @@ async def criar_alerta(message: discord.Message) -> None:
 
             valor = PyBCoin.adicionar_pontos(valor)
             alerta[2] = nome_condicao(alerta[2])
-            retornar = f'Alerta para {alerta[1]} {alerta[2]} USD {valor} criado com sucesso !'
+
+            sigla = 'USD'
+            if alerta[1] == 'dolar':
+                sigla = 'BRL'
+
+            retornar = f'Alerta para {alerta[1]} {alerta[2]} {sigla} {valor} criado com sucesso !'
             log(retornar)
-            retornar += f'\nUma mensagem de alerta será enviada para você quando o preço atingir USD {valor} !'
+
+            retornar += f'\nUma mensagem de alerta será enviada para você quando o preço atingir {sigla} {valor} !'
+
             await gerar_dm(author)
             await author.dm_channel.send(f'{author.mention} {retornar}', embed=await meus_alertas(author, enviar_embed=True))
             enviado = True
