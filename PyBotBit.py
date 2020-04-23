@@ -5,6 +5,7 @@
 #                                Copyright © 2020 Wesley Dias   #
 # ------------------------------------------------------------- #
 
+import json
 import discord
 import PyBCoin
 import asyncio
@@ -90,18 +91,13 @@ def nome_condicao(condicao: str) -> str:
         return 'abaixo de'
 
 
-def ler_alertas_arq() -> list:
+def ler_alertas_arq() -> dict:
     """
     ler_alertas_arq(): Serve para retornar uma lista com todos os alertas salvos
     :return: list, lista com todos os alertas salvos
     """
     with open('Data/Alertas', 'r') as arq:
-        arq_alertas = arq.readlines()
-    alertas = []
-    for alerta in arq_alertas:
-        if alerta != '\n':
-            dados = alerta.strip().split()
-            alertas.append(dados)
+        alertas = json.loads(arq.read())
     return alertas
 
 
@@ -138,21 +134,22 @@ async def monitorar_alertas() -> None:
     :return: None
     """
     indice = ativado = 0
-    alertas = ler_alertas_arq()
+    dicionario = ler_alertas_arq()
+    alertas = dicionario["alertas"]
     for alerta in alertas:
-        preco = PyBCoin.buscar_preco(alerta[1])
-        if (alerta[2] == '>' and preco >= float(alerta[3])) or (alerta[2] == '<' and preco <= float(alerta[3])):
-            author = client.get_user(int(alerta[0]))
+        preco = PyBCoin.buscar_preco(alerta["moeda"])
+        if (alerta["cond"] == '>' and preco >= float(alerta["preco"])) or (alerta["cond"] == '<' and preco <= float(alerta["preco"])):
+            author = client.get_user(int(alerta["user"]))
             await gerar_dm(author)
-            alerta[2] = nome_condicao(alerta[2])
-            await author.dm_channel.send(f'{author.mention} :loudspeaker: Alerta disparado {alerta[1]} {alerta[2]} USD {PyBCoin.adicionar_pontos(alerta[3])}')
-            await dados_criptomoedas(alerta[1], int(alerta[0]))
+            alerta["cond"] = nome_condicao(alerta["cond"])
+            await author.dm_channel.send(f'{author.mention} :loudspeaker: Alerta disparado {alerta["moeda"]} {alerta["cond"]} USD {PyBCoin.adicionar_pontos(alerta["preco"])}')
+            await dados_criptomoedas(alerta["moeda"], int(alerta["user"]))
             del alertas[indice]
+            dicionario["alertas"] = alertas
             log(f'Alerta {alerta} ativado e excluído com sucesso !')
             ativado += 1
             with open('Data/Alertas', 'w') as arq:
-                for arq_alerta in alertas:
-                    arq.writelines(f'{str(arq_alerta[0])} {arq_alerta[1]} {arq_alerta[2]} {arq_alerta[3]}\n')
+                arq.write(json.dumps(dicionario))
         indice += 1
 
     log(f'({len(alertas)} alertas ativos) ({ativado} alertas disparados)')
@@ -169,11 +166,13 @@ async def meus_alertas(author: int or discord.User, enviar: bool = True, enviar_
     :return: list, retorna o número de alertas e quem são eles, list[0] = número de alertas, list[1] = list[alertas] ou discord.Embed
     """
     author = obter_author(author)
-    alertas = ler_alertas_arq()
+    dicionario = ler_alertas_arq()
+    alertas = dicionario["alertas"]
+
     cont = 0
     meus = []
     for alerta in alertas:
-        if alerta[0] == str(author.id):
+        if alerta['user'] == author.id:
             cont += 1
             meus.append(alerta)
 
@@ -185,12 +184,12 @@ async def meus_alertas(author: int or discord.User, enviar: bool = True, enviar_
         vazio = True
         for i, meu in enumerate(meus):
             vazio = False
-            if meu[2] == '<':
-                meu[2] = 'abaixo de'
+            if meu["cond"] == '<':
+                meu["cond"] = 'abaixo de'
 
-            elif meu[2] == '>':
-                meu[2] = 'acima de'
-            embed.add_field(name=f':bell: Alerta (ID {i})', value=f'{meu[1]} {meu[2]} USD {PyBCoin.adicionar_pontos(meu[3])}\n', inline=False)
+            elif meu["cond"] == '>':
+                meu["cond"] = 'acima de'
+            embed.add_field(name=f':bell: Alerta (ID {i})', value=f'{meu["moeda"]} {meu["cond"]} USD {PyBCoin.adicionar_pontos(meu["preco"])}\n', inline=False)
 
         if vazio:
             embed.add_field(name='Oops não encontrei nada por aqui !', value='Você não tem nenhum alerta ativo\nPara criar utilize `!alertar (criptomoeda) (condição) (valor)`')
@@ -222,8 +221,15 @@ async def criar_alerta(message: discord.Message) -> None:
             if alerta[3].find(','):
                 alerta[3] = alerta[3].replace(',', '.')
             valor = float(alerta[3])
-            with open('Data/Alertas', 'a') as arq:
-                arq.writelines(f'{alerta[0]} {alerta[1]} {alerta[2]} {valor}\n')
+            with open('Data/Alertas', 'r') as arq:
+                dicionario = json.loads(arq.read())
+
+            alertas = dicionario["alertas"]
+            alertas.append({"user": alerta[0], "moeda": alerta[1], "cond": alerta[2], "preco": valor})
+            dicionario["alertas"] = alertas
+            with open('Data/Alertas', 'w') as arq:
+                arq.write(json.dumps(dicionario))
+
             valor = PyBCoin.adicionar_pontos(valor)
             alerta[2] = nome_condicao(alerta[2])
             retornar = f'Alerta para {alerta[1]} {alerta[2]} USD {valor} criado com sucesso !'
@@ -261,21 +267,21 @@ async def remover_alerta(message: discord.Message) -> bool:
         await author.dm_channel.send(f'{author.mention} Erro ao deletar alerta. comando `{mensagem}` inválido\nDigite `!ajuda` para saber sobre os comandos disponíveis ')
         return False
 
-    arq_alertas = ler_alertas_arq()
-    alertas = arq_alertas
+    dicionario = ler_alertas_arq()
+    alertas = dicionario["alertas"]
     remover = await meus_alertas(author.id, False)
     try:
         if remover[0] > id_alerta >= 0:
             indice = 0
-            for arq_alerta in arq_alertas:
-                if arq_alerta == remover[1][id_alerta]:
+            for alerta in alertas:
+                if alerta == remover[1][id_alerta]:
                     del alertas[indice]
+                    dicionario["alertas"] = alertas
                     break
                 indice += 1
 
             with open('Data/Alertas', 'w') as arq:
-                for arq_alerta in alertas:
-                    arq.writelines(f'{str(arq_alerta[0])} {arq_alerta[1]} {arq_alerta[2]} {arq_alerta[3]}\n')
+                arq.write(json.dumps(dicionario))
             log(f'Alerta {remover[1][id_alerta]} removido com sucesso !')
             await author.dm_channel.send(f'{author.mention} Alerta removido com sucesso !', embed=await meus_alertas(author, enviar_embed=True))
             return True
