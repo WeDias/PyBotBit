@@ -1,3 +1,6 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+
 # ------------------------------------------------------------- #
 #                                          PyBotBit             #
 #                                       Github:@WeDias          #
@@ -7,8 +10,8 @@
 
 import json
 import discord
-import PyBCoin
 import asyncio
+import PyBCoin
 from datetime import datetime
 
 client = discord.Client(max_messages=None)
@@ -70,7 +73,9 @@ async def mudar_status(txt: str, status: discord.Status) -> None:
     :param status: discord.Status, status operacional do bot
     :return: None
     """
-    await client.change_presence(status=status, activity=discord.Game(name=txt))
+    await client.change_presence(status=status,
+                                 activity=discord.Game(name=txt))
+
     await asyncio.sleep(1)
 
 
@@ -130,7 +135,8 @@ def verificar_alerta(alerta: list) -> bool:
 
 async def monitorar_alertas() -> None:
     """
-    monitorar_alertas(): Serve para monitorar os alertas criados e avisar o usuário caso a condição seja atendida
+    monitorar_alertas(): Serve para monitorar os alertas criados
+    e avisar o usuário caso a condição seja atendida
     :return: None
     """
     indice = ativado = 0
@@ -138,7 +144,10 @@ async def monitorar_alertas() -> None:
     alertas = dicionario["alertas"]
     for alerta in alertas:
         preco = PyBCoin.buscar_preco(alerta["moeda"])
-        if (alerta["cond"] == '>' and preco >= float(alerta["preco"])) or (alerta["cond"] == '<' and preco <= float(alerta["preco"])):
+
+        if (alerta["cond"] == '>' and preco >= float(alerta["preco"]))\
+                or (alerta["cond"] == '<' and preco <= float(alerta["preco"])):
+
             author = client.get_user(int(alerta["user"]))
             await gerar_dm(author)
             alerta["cond"] = nome_condicao(alerta["cond"])
@@ -147,7 +156,9 @@ async def monitorar_alertas() -> None:
             if alerta["moeda"] == 'dolar':
                 sigla = 'BRL'
 
-            await author.dm_channel.send(f'{author.mention} :loudspeaker: Alerta disparado {alerta["moeda"]} {alerta["cond"]} {sigla} {PyBCoin.adicionar_pontos(alerta["preco"])}')
+            await author.dm_channel.send(f'{author.mention} :loudspeaker: Alerta disparado {alerta["moeda"]} '
+                                         f'{alerta["cond"]} {sigla} {PyBCoin.adicionar_pontos(alerta["preco"])}')
+
             await dados_criptomoedas(alerta["moeda"], int(alerta["user"]))
             del alertas[indice]
             dicionario["alertas"] = alertas
@@ -164,13 +175,14 @@ async def monitorar_alertas() -> None:
     await asyncio.sleep(10)
 
 
-async def meus_alertas(author: int or discord.User, enviar: bool = True, enviar_embed: bool = False) -> list or discord.Embed:
+async def meus_alertas(author: int or discord.User, enviar: bool = True, enviar_embed: bool = False)\
+        -> list or discord.Embed:
     """
     meus_alertas(): Serve para mostrar ao usuário os alertas criados por ele
     :param enviar: bool, Se True ele enviará os alertas para o usuário, criados por ele
     :param author: int ou discord.User, id usuário ou objeto usuário para encontrar e mandar alertas
     :param enviar_embed: bool, se True retorna o embed sem enviar para o usuário
-    :return: list, retorna o número de alertas e quem são eles, list[0] = número de alertas, list[1] = list[alertas] ou discord.Embed
+    :return: list, retorna o número de alertas e quem são eles, ou discord.Embed
     """
     author = obter_author(author)
     dicionario = ler_alertas_arq()
@@ -185,8 +197,12 @@ async def meus_alertas(author: int or discord.User, enviar: bool = True, enviar_
 
     if enviar:
         await gerar_dm(author)
-        embed = gerar_embed(color=0x12BCEC, title='Meus alertas ativos')
-        embed.set_author(name='Alertas', icon_url='https://i.pinimg.com/originals/28/33/86/283386fd0a92178f7785da3d566004d0.png')
+        embed = gerar_embed(color=0x12BCEC,
+                            title='Meus alertas ativos')
+
+        embed.set_author(name='Alertas',
+                         icon_url='https://i.pinimg.com/originals/28/33/86/283386fd0a92178f7785da3d566004d0.png')
+
         embed.set_thumbnail(url='https://i.pinimg.com/originals/28/33/86/283386fd0a92178f7785da3d566004d0.png')
         vazio = True
         for i, meu in enumerate(meus):
@@ -197,18 +213,29 @@ async def meus_alertas(author: int or discord.User, enviar: bool = True, enviar_
             if meu["moeda"] == 'dolar':
                 sigla = 'BRL'
 
-            embed.add_field(name=f':bell: Alerta (ID {i})', value=f'{meu["moeda"]} {meu["cond"]} {sigla} {PyBCoin.adicionar_pontos(meu["preco"])}\n', inline=False)
+            embed.add_field(name=f':bell: Alerta (ID {i})',
+                            value=f'{meu["moeda"]} {meu["cond"]} {sigla} {PyBCoin.adicionar_pontos(meu["preco"])}\n',
+                            inline=False)
 
         if vazio:
-            embed.add_field(name='Oops não encontrei nada por aqui !', value='Você não tem nenhum alerta ativo\nPara criar utilize `!alertar (criptomoeda) (condição) (valor)`')
-            embed.add_field(name='Exemplos de comandos válidos', value='`!alertar bitcoin > 7215.15`\n`!alertar bitcoin < 6010`', inline=False)
-            embed.add_field(name='Informações', value='Digite `!ajuda` para saber sobre o PyBotBit', inline=False)
+            embed.add_field(name='Oops não encontrei nada por aqui !',
+                            value=('Você não tem nenhum alerta ativo\n'
+                                   'Para criar utilize `!alertar (criptomoeda) (condição) (valor)`'))
+
+            embed.add_field(name='Exemplos de comandos válidos',
+                            value='`!alertar bitcoin > 7215.15`\n`!alertar bitcoin < 6010`',
+                            inline=False)
+
+            embed.add_field(name='Informações',
+                            value='Digite `!ajuda` para saber sobre o PyBotBit',
+                            inline=False)
 
         if enviar_embed:
             return embed
 
         await author.dm_channel.send(f'{author.mention} Aqui estão seus alertas ativos', embed=embed)
         log(f'({len(meus)}) Alertas encontrados')
+
     return [len(meus), meus]
 
 
@@ -242,7 +269,7 @@ async def criar_alerta(message: discord.Message) -> None:
             alerta[2] = nome_condicao(alerta[2])
 
             sigla = 'USD'
-            if alerta[1] == 'dolar':
+            if alerta[3] == 'dolar':
                 sigla = 'BRL'
 
             retornar = f'Alerta para {alerta[1]} {alerta[2]} {sigla} {valor} criado com sucesso !'
@@ -251,10 +278,13 @@ async def criar_alerta(message: discord.Message) -> None:
             retornar += f'\nUma mensagem de alerta será enviada para você quando o preço atingir {sigla} {valor} !'
 
             await gerar_dm(author)
-            await author.dm_channel.send(f'{author.mention} {retornar}', embed=await meus_alertas(author, enviar_embed=True))
+
+            await author.dm_channel.send(f'{author.mention} {retornar}',
+                                         embed=await meus_alertas(author, enviar_embed=True))
             enviado = True
         else:
             retornar = f'Erro ao criar o alerta, o comando `{mensagem}` foi digitado errado !'
+
     else:
         retornar = 'Erro ao criar o alerta, você já tem 10 alertas. Utilize `!delalertar id` para apagar algum'
 
@@ -279,7 +309,9 @@ async def remover_alerta(message: discord.Message) -> bool:
 
     except (IndexError, ValueError):
         log(f'Erro ao deletar alerta, comando {mensagem} inválido !')
-        await author.dm_channel.send(f'{author.mention} Erro ao deletar alerta. comando `{mensagem}` inválido\nDigite `!ajuda` para saber sobre os comandos disponíveis ')
+
+        await author.dm_channel.send(f'{author.mention} Erro ao deletar alerta. comando `{mensagem}`'
+                                     f' inválido\nDigite `!ajuda` para saber sobre os comandos disponíveis ')
         return False
 
     dicionario = ler_alertas_arq()
@@ -298,17 +330,23 @@ async def remover_alerta(message: discord.Message) -> bool:
             with open('Data/Alertas', 'w') as arq:
                 arq.write(json.dumps(dicionario))
             log(f'Alerta {remover[1][id_alerta]} removido com sucesso !')
-            await author.dm_channel.send(f'{author.mention} Alerta removido com sucesso !', embed=await meus_alertas(author, enviar_embed=True))
+
+            await author.dm_channel.send(f'{author.mention} Alerta removido com sucesso !',
+                                         embed=await meus_alertas(author, enviar_embed=True))
             return True
 
         else:
             log('Erro ao deletar, alerta inexistente !')
-            await author.dm_channel.send(f'{author.mention} Erro ao deletar. Alerta inexistente\nDigite `!alertas` para visualizar seus alertas existentes')
+
+            await author.dm_channel.send(f'{author.mention} Erro ao deletar. Alerta inexistente\n'
+                                         f'Digite `!alertas` para visualizar seus alertas existentes')
             return False
 
     except TypeError:
         log(f'Erro ao deletar alerta, comando {mensagem} inválido !')
-        await author.dm_channel.send(f'{author.mention} Erro ao deletar alerta. comando `{mensagem}` inválido\nDigite `!ajuda` para saber sobre os comandos disponíveis ')
+
+        await author.dm_channel.send(f'{author.mention} Erro ao deletar alerta. comando `{mensagem}` inválido\n'
+                                     f'Digite `!ajuda` para saber sobre os comandos disponíveis ')
         return False
 
 # ----------------------------------------------------------------------------------------------------------------------
@@ -332,7 +370,10 @@ def gerar_embed(**kwargs) -> discord.Embed:
     :return: discord.Embed
     """
     embed = discord.Embed(**kwargs)
-    embed.set_footer(text='PyBotBit © 2020 Wesley Dias', icon_url='https://avatars2.githubusercontent.com/u/56437612?s=88&u=c9ddcaa797c6a84031e4441c7f42fbc72ec6a4b1&v=4')
+
+    embed.set_footer(text='PyBotBit © 2020 Wesley Dias',
+                     icon_url=('https://avatars2.githubusercontent.com'
+                               '/u/56437612?s=88&u=c9ddcaa797c6a84031e4441c7f42fbc72ec6a4b1&v=4'))
     return embed
 
 
@@ -353,9 +394,14 @@ async def ajuda(message: discord.Message) -> None:
     :param message: discord.Message, objeto mensagem gerado pelo usuário
     :return: None
     """
-    embed = gerar_embed(color=0x12BCEC, title=':robot: Informações sobre o PyBotBit')
+    embed = gerar_embed(color=0x12BCEC,
+                        title=':robot: Informações sobre o PyBotBit')
+
     embed.set_thumbnail(url='https://images.emojiterra.com/google/android-nougat/512px/2753.png')
-    embed.set_author(name='PyBotBit ajuda', url='https://github.com/wedias', icon_url='https://images.emojiterra.com/google/android-nougat/512px/2753.png')
+
+    embed.set_author(name='PyBotBit ajuda',
+                     url='https://github.com/wedias',
+                     icon_url='https://images.emojiterra.com/google/android-nougat/512px/2753.png')
 
     sobre = '''
     PyBotBit é um robô/bot para o Discord com o foco no mundo das criptomoedas,
@@ -421,12 +467,25 @@ async def ajuda(message: discord.Message) -> None:
     Github: [@WeDias](https://github.com/WeDias/)
     '''
 
-    embed.add_field(name='Sobre o PyBotBit', value=sobre, inline=False)
-    embed.add_field(name='Comandos válidos', value=comandos, inline=False)
-    embed.add_field(name='Observações', value=obsevacao, inline=False)
-    embed.add_field(name='Desenvolvedor', value=desenvolvedor, inline=False)
+    embed.add_field(name='Sobre o PyBotBit',
+                    value=sobre,
+                    inline=False)
 
-    await message.channel.send(f'{message.author.mention} Espero que isto possa te ajudar', embed=embed)
+    embed.add_field(name='Comandos válidos',
+                    value=comandos,
+                    inline=False)
+
+    embed.add_field(name='Observações',
+                    value=obsevacao,
+                    inline=False)
+
+    embed.add_field(name='Desenvolvedor',
+                    value=desenvolvedor,
+                    inline=False)
+
+    await message.channel.send(f'{message.author.mention} Espero que isto possa te ajudar',
+                               embed=embed)
+
     log('Ajuda enviada com sucesso !')
 
 
@@ -451,10 +510,17 @@ async def dados_criptomoedas(message: discord.Message or str, user_id: int = 0) 
     dados = PyBCoin.buscar_dados(criptomoeda)
 
     if criptomoeda == 'dolar':
-        embed = gerar_embed(color=0x228B22, title=f'Informações sobre {criptomoeda}')
-        embed.set_author(name=dados['nome'], url=f'https://dolarhoje.com', icon_url=dados['imagem'])
+        embed = gerar_embed(color=0x228B22,
+                            title=f'Informações sobre {criptomoeda}')
+
+        embed.set_author(name=dados['nome'],
+                         url=f'https://dolarhoje.com',
+                         icon_url=dados['imagem'])
+
         embed.set_thumbnail(url=dados['imagem'])
-        embed.add_field(name='Valor', value=f'R$ {PyBCoin.adicionar_pontos(dados["preco"])}')
+
+        embed.add_field(name='Valor',
+                        value=f'R$ {PyBCoin.adicionar_pontos(dados["preco"])}')
 
     else:
 
@@ -465,16 +531,34 @@ async def dados_criptomoedas(message: discord.Message or str, user_id: int = 0) 
             cor = 0xB22222
 
         embed = gerar_embed(color=cor, title=f'Informações sobre {criptomoeda}')
-        embed.set_author(name=dados['nome'], url=f'https://coinmarketcap.com/currencies/{criptomoeda}/', icon_url=dados['imagem'])
-        embed.set_thumbnail(url=dados['imagem'])
-        embed.add_field(name='Rank', value=f'#{dados["rank"]}')
-        embed.add_field(name='Valor', value=f'USD {PyBCoin.adicionar_pontos(dados["preco"])}')
-        embed.add_field(name='variação (24H)', value=f'{dados["variação"]}%')
-        embed.add_field(name='Volume (24H)', value=f'USD {PyBCoin.adicionar_pontos(dados["volume"])}')
-        embed.add_field(name='Market Cap', value=f'USD {PyBCoin.adicionar_pontos(dados["market_cap"])}')
+        embed.set_author(name=dados['nome'],
+                         url=f'https://coinmarketcap.com/currencies/{criptomoeda}/',
+                         icon_url=dados['imagem'])
 
-    embed.set_footer(text=f'Fonte: {dados["fonte"]}\nPyBotBit © 2020 Wesley Dias', icon_url='https://avatars2.githubusercontent.com/u/56437612?s=88&u=c9ddcaa797c6a84031e4441c7f42fbc72ec6a4b1&v=4')
-    await channel.send(f'{author.mention} Encontrei as seguintes informações sobre {criptomoeda}', embed=embed)
+        embed.set_thumbnail(url=dados['imagem'])
+
+        embed.add_field(name='Rank',
+                        value=f'#{dados["rank"]}')
+
+        embed.add_field(name='Valor',
+                        value=f'USD {PyBCoin.adicionar_pontos(dados["preco"])}')
+
+        embed.add_field(name='variação (24H)',
+                        value=f'{dados["variação"]}%')
+
+        embed.add_field(name='Volume (24H)',
+                        value=f'USD {PyBCoin.adicionar_pontos(dados["volume"])}')
+
+        embed.add_field(name='Market Cap',
+                        value=f'USD {PyBCoin.adicionar_pontos(dados["market_cap"])}')
+
+    embed.set_footer(text=f'Fonte: {dados["fonte"]}\nPyBotBit © 2020 Wesley Dias',
+                     icon_url=('https://avatars2.githubusercontent.com'
+                               '/u/56437612?s=88&u=c9ddcaa797c6a84031e4441c7f42fbc72ec6a4b1&v=4'))
+
+    await channel.send(f'{author.mention} Encontrei as seguintes informações sobre {criptomoeda}',
+                       embed=embed)
+
     log(f'Dados sobre {criptomoeda} enviados com sucesso !')
 
 
@@ -488,11 +572,24 @@ async def pizza(message: discord.Message) -> None:
     pizza_us = PyBCoin.adicionar_pontos(valor_pizza)
     pizza_br = int(valor_pizza * PyBCoin.buscar_dados('dolar')['preco'])
     pizza_br = PyBCoin.adicionar_pontos(pizza_br)
-    embed = gerar_embed(color=0xff9900, title='A história da pizza')
-    embed.set_author(name='A pizza', icon_url='https://www.pngkit.com/png/full/2-20847_file-cpnext-emoticon-pizza-fatia-de-pizza-desenho.png')
-    embed.add_field(name='A pizza mais cara do mundo !', value=f'Em 22 de maio de 2010 uma pizza foi comprada por **10.000 BTC**\nHoje está pizza custaria **USD {pizza_us}** ou **R$ {pizza_br}**')
-    embed.set_thumbnail(url='https://www.pngkit.com/png/full/2-20847_file-cpnext-emoticon-pizza-fatia-de-pizza-desenho.png')
-    await message.channel.send(f'{message.author.mention} Alguem pediu uma pizza ?', embed=embed)
+
+    embed = gerar_embed(color=0xff9900,
+                        title='A história da pizza')
+
+    embed.set_author(name='A pizza',
+                     icon_url=('https://www.pngkit.com/png/full/'
+                               '2-20847_file-cpnext-emoticon-pizza-fatia-de-pizza-desenho.png'))
+
+    embed.add_field(name='A pizza mais cara do mundo !',
+                    value=(f'Em 22 de maio de 2010 uma pizza foi comprada por **10.000 BTC**'
+                           f'\nHoje está pizza custaria **USD {pizza_us}** ou **R$ {pizza_br}**'))
+
+    embed.set_thumbnail(url=('https://www.pngkit.com/png/full/'
+                             '2-20847_file-cpnext-emoticon-pizza-fatia-de-pizza-desenho.png'))
+
+    await message.channel.send(f'{message.author.mention} Alguem pediu uma pizza ?',
+                               embed=embed)
+
     log('Informações sobre a pizza enviados com sucesso !')
 
 
@@ -511,7 +608,9 @@ async def calcular_criptomoeda(message: discord.Message) -> None:
     except ValueError:
         author = message.author
         log('Não entendi o comando solicitado')
-        await message.channel.send(f'{author.mention} Não entendi o seu comando `{message.content.lower()}`\nDigite `!ajuda` para conhecer os comandos disponíveis')
+
+        await message.channel.send(f'{author.mention} Não entendi o seu comando `{message.content.lower()}`'
+                                   f'\nDigite `!ajuda` para conhecer os comandos disponíveis')
         return None
 
     if dados[1] > 0:
@@ -527,14 +626,22 @@ async def calcular_criptomoeda(message: discord.Message) -> None:
         else:
             vale = 'vale'
 
-        embed = gerar_embed(color=0xdaa520, title=f'Quanto {vale} {PyBCoin.adicionar_pontos(dados[1])} {nome} ?')
-        embed.set_thumbnail(url='https://content.octadesk.com/hs-fs/hubfs/LP%20-%20RD-35.png?width=316&name=LP%20-%20RD-35.png')
-        embed.set_author(name='Calculadora de criptomoedas', icon_url='https://content.octadesk.com/hs-fs/hubfs/LP%20-%20RD-35.png?width=316&name=LP%20-%20RD-35.png')
+        embed = gerar_embed(color=0xdaa520,
+                            title=f'Quanto {vale} {PyBCoin.adicionar_pontos(dados[1])} {nome} ?')
+
+        embed.set_thumbnail(url=('https://content.octadesk.com/hs-fs/hubfs'
+                                 '/LP%20-%20RD-35.png?width=316&name=LP%20-%20RD-35.png'))
+
+        embed.set_author(name='Calculadora de criptomoedas',
+                         icon_url=('https://content.octadesk.com/hs-fs/'
+                                   'hubfs/LP%20-%20RD-35.png?width=316&name=LP%20-%20RD-35.png'))
 
         if dados[0] == 'dolar':
             preco_br = PyBCoin.buscar_dados('dolar')['preco'] * float(dados[1])
             preco_br = PyBCoin.adicionar_pontos(preco_br)
-            embed.add_field(name='Em reais', value=f'R$ {preco_br}')
+
+            embed.add_field(name='Em reais',
+                            value=f'R$ {preco_br}')
 
         else:
             preco_us = PyBCoin.buscar_preco(dados[0]) * float(dados[1])
@@ -542,10 +649,15 @@ async def calcular_criptomoeda(message: discord.Message) -> None:
             preco_us = PyBCoin.adicionar_pontos(preco_us)
             preco_br = PyBCoin.adicionar_pontos(preco_br)
             dados[1] = PyBCoin.adicionar_pontos(dados[1])
-            embed.add_field(name='Em dólares', value=f'USD {preco_us}')
-            embed.add_field(name='Em reais', value=f'R$ {preco_br}')
 
-        await message.channel.send(f'{message.author.mention} Acabei de calcular isto', embed=embed)
+            embed.add_field(name='Em dólares',
+                            value=f'USD {preco_us}')
+
+            embed.add_field(name='Em reais',
+                            value=f'R$ {preco_br}')
+
+        await message.channel.send(f'{message.author.mention} Acabei de calcular isto',
+                                   embed=embed)
 
     else:
         log('multiplicação por 0... sério !?')
@@ -577,7 +689,9 @@ async def limpar_mensagens(message: discord.Message) -> None:
 
     if not apagado:
         log(f'Não há mensagens de {message.author} para apagar !')
-        await message.channel.send(f'{message.author.mention} Tudo limpo por aqui !\nVocê não tem mensagens enviadas para eu apagar')
+
+        await message.channel.send(f'{message.author.mention}'
+                                   f' Tudo limpo por aqui !\nVocê não tem mensagens enviadas para eu apagar')
 
     else:
         log(f'Todas as mensagens de {message.author} foram apagada com sucesso !')
@@ -589,17 +703,32 @@ async def noticias(message: discord.Message) -> None:
     :param message: discord.Message, objeto mensagem gerado pelo usuário
     :return: None
     """
-    embed = gerar_embed(color=0x7b68ee, title='Últimas notícias')
-    embed.set_author(name='Notícias', url='https://www.criptofacil.com/ultimas-noticias/', icon_url='https://cdn3.iconfinder.com/data/icons/ballicons-reloaded-free/512/icon-70-512.png')
-    embed.set_thumbnail(url='https://cdn3.iconfinder.com/data/icons/ballicons-reloaded-free/512/icon-70-512.png')
-    embed.set_footer(text=f'Fonte: criptofacil\nPyBotBit © 2020 Wesley Dias', icon_url='https://avatars2.githubusercontent.com/u/56437612?s=88&u=c9ddcaa797c6a84031e4441c7f42fbc72ec6a4b1&v=4')
+    embed = gerar_embed(color=0x7b68ee,
+                        title='Últimas notícias')
+
+    embed.set_author(name='Notícias',
+                     url='https://www.criptofacil.com/ultimas-noticias/',
+                     icon_url='https://cdn3.iconfinder.com/data'
+                              '/icons/ballicons-reloaded-free/512/icon-70-512.png')
+
+    embed.set_thumbnail(url='https://cdn3.iconfinder.com/data/'
+                            'icons/ballicons-reloaded-free/512/icon-70-512.png')
+
+    embed.set_footer(text=f'Fonte: criptofacil\nPyBotBit © 2020 Wesley Dias',
+                     icon_url='https://avatars2.githubusercontent.com'
+                              '/u/56437612?s=88&u=c9ddcaa797c6a84031e4441c7f42fbc72ec6a4b1&v=4')
 
     list_noticias = PyBCoin.ultimas_noticias()
     for i, noticia in enumerate(list_noticias):
-        embed.add_field(name=noticia['data'], value=f'{noticia["nome"]} [Leia sobre]({noticia["link"]})\n', inline=False)
+
+        embed.add_field(name=noticia['data'],
+                        value=f'{noticia["nome"]} [Leia sobre]({noticia["link"]})\n',
+                        inline=False)
 
     log(f'Notícias {list_noticias} enviadas com sucesso !')
-    await message.channel.send(f'{message.author.mention} Encontrei estas noticias para você', embed=embed)
+
+    await message.channel.send(f'{message.author.mention} Encontrei estas noticias para você',
+                               embed=embed)
 
 
 async def ping(message: discord.Message) -> None:
@@ -607,11 +736,20 @@ async def ping(message: discord.Message) -> None:
     ping(): Serve para retornar a latência do bot
     :return: None
     """
-    embed = gerar_embed(title='Ping', color=0xdaa520)
-    embed.set_author(name='Devtools', icon_url='https://pngimage.net/wp-content/uploads/2018/05/engrenagem-png-3.png')
+    embed = gerar_embed(title='Ping',
+                        color=0xdaa520)
+
+    embed.set_author(name='Devtools',
+                     icon_url='https://pngimage.net/wp-content/uploads/2018/05/engrenagem-png-3.png')
+
     embed.set_thumbnail(url='https://pngimage.net/wp-content/uploads/2018/05/engrenagem-png-3.png')
-    embed.add_field(name='ping', value=f'{int(client.latency * 1000)} ms')
-    await message.channel.send(f'{message.author.mention} Este é meu ping no momento', embed=embed)
+
+    embed.add_field(name='ping',
+                    value=f'{int(client.latency * 1000)} ms')
+
+    await message.channel.send(f'{message.author.mention} Este é meu ping no momento',
+                               embed=embed)
+
     log(f'[{int(client.latency * 1000)} ms] Este é meu ping no momento')
 
 # ----------------------------------------------------------------------------------------------------------------------
@@ -621,7 +759,8 @@ async def ping(message: discord.Message) -> None:
 @client.event
 async def on_ready() -> None:
     """
-    on_ready(): Serve para criar um loop e executar tarefas quando o bot for iniciado com sucesso
+    on_ready(): Serve para criar um loop e executar
+    tarefas quando o bot for iniciado com sucesso
     :return: None
     """
     log_menu()
@@ -638,26 +777,29 @@ async def on_disconnect() -> None:
     :return: None
     """
     log('PyBotBit foi desconectado', True)
-    input('Digite enter para religar o bot')
-    await client.run()
 
 
 @client.event
 async def on_member_join(member: discord.Member) -> None:
     """
-    on_member_join(): Serve para verificar quando um novo usuário entrou e eniar mensagem de boas vindas
+    on_member_join(): Serve para verificar quando um novo usuário
+    entrou e eniar mensagem de boas vindas
     :param member: discord.Member, objeto member recebido quando o usuário entrou
     :return: None
     """
     await gerar_dm(member)
-    text = f'{member.mention} Seja bem vindo ! Meu nome é PyBotBit sou um robô, fui criado para te ajudar!\nDigite `!ajuda`'
+
+    text = (f'{member.mention} Seja bem vindo ! Meu nome é PyBotBit'
+            f' sou um robô, fui criado para te ajudar!\nDigite `!ajuda`')
+
     await member.dm_channel.send(text)
 
 
 @client.event
 async def on_message(message: discord.Message) -> None:
     """
-    on_message(): Serve para obter mensagens enviadas pelos usuários e realizar tarefas a partir de comandos
+    on_message(): Serve para obter mensagens enviadas pelos
+    usuários e realizar tarefas a partir de comandos
     :param message: objeto da mensagem recebida
     :return: None
     """
@@ -693,7 +835,9 @@ async def on_message(message: discord.Message) -> None:
                     await mudar_status('Enviando ping', discord.Status.idle)
                     await ping(message)
 
-                elif mensagem.startswith('!alertar') and len(mensagem.split()) == 4 and PyBCoin.verificador(mensagem[1:].split()[1]):
+                elif mensagem.startswith('!alertar') and len(mensagem.split()) == 4\
+                        and PyBCoin.verificador(mensagem[1:].split()[1]):
+
                     await mudar_status('Criando alerta', discord.Status.idle)
                     await criar_alerta(message)
 
@@ -717,9 +861,13 @@ async def on_message(message: discord.Message) -> None:
                         criado = False
 
                     finally:
+
                         if not criado:
                             log('Não entendi o comando solicitado')
-                            await message.channel.send(f'{author.mention} Não entendi o seu comando `{message.content.lower()}`\nDigite `!ajuda` para conhecer os comandos disponíveis')
+
+                            await message.channel.send(
+                                f'{author.mention} Não entendi o seu comando `{message.content.lower()}'
+                                f'`\nDigite `!ajuda` para conhecer os comandos disponíveis')
 
         else:
             log(f'Verificando mensagem enviada por: {author.name}', True)

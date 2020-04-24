@@ -1,5 +1,8 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+
 # ------------------------------------------------------------- #
-#                                         PyBCoin               #
+#                                          PyBCoin              #
 #                                       Github:@WeDias          #
 #                                    Licença: MIT License       #
 #                                Copyright © 2020 Wesley Dias   #
@@ -11,6 +14,7 @@
 
 import requests
 from bs4 import BeautifulSoup
+
 
 # ----------------------------------------------------------------------------------------------------------------------
 # funções referentes a formatação de strings
@@ -26,7 +30,7 @@ def adicionar_pontos(numero: int or str or float) -> str:
     numero = str(numero)
     if numero.find('.') and float(numero) >= 1000:
         numero = f'{float(numero):.2f}'
-        decimos = numero[numero.find('.')+1:]
+        decimos = numero[numero.find('.') + 1:]
         numero = numero[:numero.find('.')]
 
     if float(numero) >= 1000:
@@ -73,6 +77,30 @@ def remover_virgulas(string: str) -> str:
 # funções referentes aos dados das criptomoedas
 
 
+def requisicao(link: str) -> BeautifulSoup:
+    """
+    requisicao(): Serve para retornar o codigo html do site
+    :param link: str, link do site
+    :return: BeutifulSoup, codigo html
+    """
+    headers = {
+        'user-agent': ('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
+                       ' (KHTML, like Gecko) Chrome/80.0.3987.149 Safari/537.36')}
+
+    resposta = requests.get(link, headers)
+    return BeautifulSoup(resposta.text, 'html.parser')
+
+
+def dolar() -> float:
+    """
+    dolar(): Serve para retornar o preço atual do dólar
+    :return: float: preço do dólar
+    """
+    dados = requisicao('https://dolarhoje.com/')
+    preco = str(dados.find('span', class_='cotMoeda nacional').find('input'))
+    return float(preco[preco.find('value="') + 7:preco.rfind('"')].replace(',', '.'))
+
+
 def verificador(criptomoeda: str) -> bool:
     """
     verificador(): Verifica se a string digitada é o nome de uma criptomoeda
@@ -83,7 +111,10 @@ def verificador(criptomoeda: str) -> bool:
         return True
 
     link = f'https://coinmarketcap.com/currencies/{criptomoeda}/'
-    headers = {'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/80.0.3987.149 Safari/537.36'}
+    headers = {
+        'user-agent': ('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
+                       ' (KHTML, like Gecko) Chrome/80.0.3987.149 Safari/537.36')}
+
     try:
         return requests.get(link, headers=headers, timeout=1).status_code == 200
 
@@ -101,59 +132,78 @@ def buscar_dados(criptomoeda: str) -> dict:
     if nome == 'dolar':
         fonte = 'dolarhoje.com'
         imagem = 'https://pngimage.net/wp-content/uploads/2018/05/dollar-png-4.png'
-        link = 'https://dolarhoje.com/'
-        headers = {'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/80.0.3987.149 Safari/537.36'}
-        resposta = requests.get(link, headers=headers)
-        dados = BeautifulSoup(resposta.text, 'html.parser')
-        valor = str(dados.find('span', class_='cotMoeda nacional').find('input'))
-        valor = float(valor[valor.find('value="')+7:valor.rfind('"')].replace(',', '.'))
-        return {'nome': nome, 'fonte': fonte, 'imagem': imagem, 'preco': valor}
+        dados = requisicao('https://dolarhoje.com/')
+        preco = str(dados.find('span', class_='cotMoeda nacional').find('input'))
+        preco = float(preco[preco.find('value="') + 7:preco.rfind('"')].replace(',', '.'))
+        return {'nome': nome, 'fonte': fonte, 'imagem': imagem, 'preco': preco}
 
     else:
         fonte = 'CoinMarketCap'
         link = f'https://coinmarketcap.com/currencies/{nome}/'
-        headers = {'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/80.0.3987.149 Safari/537.36'}
+
+        headers = {
+            'user-agent': ('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
+                           ' (KHTML, like Gecko) Chrome/80.0.3987.149 Safari/537.36')}
+
         resposta = requests.get(link, headers=headers)
         if resposta.status_code == 200:
             dados = BeautifulSoup(resposta.text, 'html.parser')
-            # ------------------------------------------------------------------------------------------------------------------
+            # ----------------------------------------------------------------------------------------------------------
             # rank de mercado da criptomoeda
             rank_mercado = dados.find(class_='cmc-label cmc-label--success sc-13jrx81-0 FVuRP').get_text()
             rank_mercado = int(rank_mercado.replace('Rank ', ''))
 
-            # ------------------------------------------------------------------------------------------------------------------
+            # ----------------------------------------------------------------------------------------------------------
             # preço em dólar
             preco = dados.find(class_='cmc-details-panel-price__price').get_text()[1:]
             preco = float(remover_virgulas(preco))
 
-            # ------------------------------------------------------------------------------------------------------------------
+            # ----------------------------------------------------------------------------------------------------------
             # variação da criptomoeda em relação ao dólar
             variacao = dados.find(class_='cmc--change-negative cmc-details-panel-price__price-change')
+
             if variacao is None:
-                variacao = float(dados.find(class_='cmc--change-positive cmc-details-panel-price__price-change').get_text()[2:-2])
+                variacao = float(
+                    dados.find(class_='cmc--change-positive cmc-details-panel-price__price-change').get_text()[2:-2])
             else:
                 variacao = float(variacao.get_text()[2:-2])
 
-            # ------------------------------------------------------------------------------------------------------------------
+            # ----------------------------------------------------------------------------------------------------------
             # preço em bitcoin
             preco_btc = dados.find(class_='cmc-details-panel-price__crypto-price').get_text()
             preco_btc = float(remover_virgulas(preco_btc.split()[0]))
 
-            # ------------------------------------------------------------------------------------------------------------------
+            # ----------------------------------------------------------------------------------------------------------
             # market cap
-            market_cap = str(dados.find('ul', class_='cmc-details-panel-stats k1ayrc-0 OZKKF').find_next('span').get_text())
+            market_cap = str(
+                dados.find('ul',
+                           class_='cmc-details-panel-stats k1ayrc-0 OZKKF').find_next('span').get_text())
+
             market_cap = int(remover_virgulas(market_cap)[1:-4])
 
-            # ------------------------------------------------------------------------------------------------------------------
+            # ----------------------------------------------------------------------------------------------------------
             # volume (24H)
-            volume = str(dados.find('ul', class_='cmc-details-panel-stats k1ayrc-0 OZKKF').find_all('span')[2].get_text())
+            volume = str(dados.find('ul',
+                                    class_='cmc-details-panel-stats k1ayrc-0 OZKKF').find_all('span')[2].get_text())
+
             volume = int(remover_virgulas(volume)[1:-4])
 
-            # ------------------------------------------------------------------------------------------------------------------
+            # ----------------------------------------------------------------------------------------------------------
             # imagem
             imagem = str(dados)
-            imagem = imagem[imagem.find('https://s2.coinmarketcap.com/static/img/coins/200x200/'):imagem.find('.png"')+4]
-            return {'fonte': fonte, 'imagem': imagem, 'rank': rank_mercado, 'nome': nome, 'preco': preco, 'variação': variacao, 'preco_btc': preco_btc, 'market_cap': market_cap, 'volume': volume}
+
+            imagem = imagem[
+                     imagem.find('https://s2.coinmarketcap.com/static/img/coins/200x200/'):imagem.find('.png"') + 4]
+
+            return {'fonte': fonte,
+                    'imagem': imagem,
+                    'rank': rank_mercado,
+                    'nome': nome,
+                    'preco': preco,
+                    'variação': variacao,
+                    'preco_btc': preco_btc,
+                    'market_cap': market_cap,
+                    'volume': volume}
 
 
 def buscar_preco(criptomoeda: str) -> float:
@@ -163,20 +213,20 @@ def buscar_preco(criptomoeda: str) -> float:
     :return: float, preço atual da criptomoeda
     """
     preco = 0
-    headers = {'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/80.0.3987.149 Safari/537.36'}
+
+    headers = {
+        'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
+                      ' (KHTML, like Gecko) Chrome/80.0.3987.149 Safari/537.36'}
+
     if criptomoeda != 'dolar':
         link = f'https://coinmarketcap.com/currencies/{criptomoeda}/'
-        resposta = requests.get(link, headers=headers)
-        if resposta.status_code == 200:
-            dados = BeautifulSoup(resposta.text, 'html.parser')
+        req = requests.get(link, headers=headers)
+        if req.status_code == 200:
+            dados = BeautifulSoup(req.text, 'html.parser')
             preco = dados.find(class_='cmc-details-panel-price__price').get_text()[1:]
             preco = float(remover_virgulas(preco))
     else:
-        link = 'https://dolarhoje.com/'
-        resposta = requests.get(link, headers=headers)
-        dados = BeautifulSoup(resposta.text, 'html.parser')
-        preco = str(dados.find('span', class_='cotMoeda nacional').find('input'))
-        preco = float(preco[preco.find('value="') + 7:preco.rfind('"')].replace(',', '.'))
+        preco = dolar()
 
     return preco
 
@@ -191,12 +241,14 @@ def ultimas_noticias() -> list:
     :return: list, contendo dicionarios, cada dicionario é uma noticia contendo nome, link e data
     """
     retornar = []
-    link = 'https://www.criptofacil.com/ultimas-noticias/'
-    headers = {'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/80.0.3987.149 Safari/537.36'}
-    resposta = requests.get(link, headers)
-    dados = BeautifulSoup(resposta.text, 'html.parser')
-    noticias = dados.find('div', class_='uael-post-grid__inner uael-post__columns-3 uael-post__columns-tablet-2 uael-post__columns-mobile-1 uael-post-infinite-scroll uael-post-infinite__event-click')
+    dados = requisicao('https://www.criptofacil.com/ultimas-noticias/')
+    noticias = dados.find('div',
+                          class_=('uael-post-grid__inner uael-post__columns-3'
+                                  ' uael-post__columns-tablet-2 uael-post__'
+                                  'columns-mobile-1 uael-post-infinite-scroll uael-post-infinite__event-click'))
+
     noticias_a = noticias.find_all_next('a', target='_self')
+
     datas = noticias.find_all('span', class_='uael-post__date')
     for i, noticia in enumerate(noticias_a):
         if noticia.get('title'):
@@ -220,7 +272,6 @@ def main() -> None:
     main(): Serve para testar as funções criadas sem interferir na importação das funções para outros arquivos
     :return: None
     """
-
     pass
 
 
