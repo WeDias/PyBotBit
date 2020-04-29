@@ -13,6 +13,8 @@ calcula o valor total em USD e em BRL de suas moedas!
 Para saber mais sobre os comando válidos leia o [Manual de ajuda](https://github.com/WeDias/PyBotBit/blob/master/Manual%20de%20ajuda.pdf)
 
 ### Adicionar no seu servidor:
+Para usar e adicionar o bot em seu servidor de forma simples, sem precisar instalar e executar em sua máquina clique no botão adicionar
+
 ##### Permissões necessárias:
 - [x] Enviar mensagens
 - [x] Enviar mensagens em TTS
@@ -24,10 +26,18 @@ Para saber mais sobre os comando válidos leia o [Manual de ajuda](https://githu
 - [x] Adicionar reações
 - [x] Usar emojis externos
 
-Para usar e adicionar o bot em seu servidor clique no botão adicionar ou [Clique aqui](https://discordapp.com/oauth2/authorize?client_id=701186412799721523&permissions=522304&scope=bot)  
 [![adicionar](https://github.com/WeDias/PyBotBit/blob/master/ignorar/addbot0.png)](https://discordapp.com/oauth2/authorize?client_id=701186412799721523&permissions=522304&scope=bot)
 
+
+
 ### Para instalar e executar em seu computador:
+Siga estes passos para instalar o PyBotBit em sua máquina
+```
+1- Baixar este repositório
+2- Instalar as bibliotecas listadas no arquivo requirements.txt
+3- Na pasta Data abra o arquivo Token e adicione o token do seu bot Discord
+4- Executar o arquivo PyBotBit.py
+```
 
 ---
 ###### ✏️ Desenvolvido por: [*Wesley Dias*](https://github.com/WeDias)
