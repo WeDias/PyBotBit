@@ -1,5 +1,6 @@
-# ![bot](https://github.com/WeDias/PyBotBit/blob/master/ignorar/bot0.png)
+![bot](https://github.com/WeDias/PyBotBit/blob/master/ignorar/bot0.png)
 
+---
 ### Sobre:
 PyBotBit é um robô/bot para o Discord com o foco no mundo das criptomoedas, ele é
 capaz de informar dados de criptomoedas como: preço, variação, criar alertas de
@@ -9,10 +10,12 @@ criptomoedas em dólar e em reais, mostrar a cotação atual do dólar. E para f
 vida, está disponível a função carteira, que salva quantas e quais moedas você tem e já
 calcula o valor total em USD e em BRL de suas moedas!
 
+---
 ### Comandos válidos:
 Para saber mais sobre os comando válidos leia o manual de ajuda   
 [![manual](https://github.com/WeDias/PyBotBit/blob/master/ignorar/ajuda_btn0.png)](https://github.com/WeDias/PyBotBit/blob/master/Manual%20de%20ajuda.pdf)
 
+---
 ### Adicionar no seu servidor:
 Para usar e adicionar o bot em seu servidor de forma simples, sem precisar instalar e executar em sua máquina clique no botão adicionar
 
@@ -29,8 +32,7 @@ Para usar e adicionar o bot em seu servidor de forma simples, sem precisar insta
 
 [![adicionar](https://github.com/WeDias/PyBotBit/blob/master/ignorar/addbot0.png)](https://discordapp.com/oauth2/authorize?client_id=701186412799721523&permissions=522304&scope=bot)
 
-
-
+---
 ### Para instalar e executar em seu computador:
 Siga estes passos para instalar o PyBotBit em sua máquina
 ```
