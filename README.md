@@ -10,7 +10,8 @@ vida, está disponível a função carteira, que salva quantas e quais moedas vo
 calcula o valor total em USD e em BRL de suas moedas!
 
 ### Comandos válidos:
-Para saber mais sobre os comando válidos leia o [Manual de ajuda](https://github.com/WeDias/PyBotBit/blob/master/Manual%20de%20ajuda.pdf)
+Para saber mais sobre os comando válidos leia o manual de ajuda   
+[![manual](https://github.com/WeDias/PyBotBit/blob/master/ignorar/ajuda_btn0.png)](https://github.com/WeDias/PyBotBit/blob/master/Manual%20de%20ajuda.pdf)
 
 ### Adicionar no seu servidor:
 Para usar e adicionar o bot em seu servidor de forma simples, sem precisar instalar e executar em sua máquina clique no botão adicionar
