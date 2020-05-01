@@ -1,6 +1,8 @@
 ![bot](https://github.com/WeDias/PyBotBit/blob/master/ignorar/bot0.png)
 
 ---
+![Criptomoedas](https://github.com/WeDias/PyBotBit/blob/master/ignorar/Criptomoedas.gif)
+
 ### Sobre:
 PyBotBit é um robô/bot para o Discord com o foco no mundo das criptomoedas, ele é
 capaz de informar dados de criptomoedas como: preço, variação, criar alertas de
@@ -9,6 +11,7 @@ notícias atuais relacionadas ao bitcoin e demais altcoins, calcular quanto vale
 criptomoedas em dólar e em reais, mostrar a cotação atual do dólar. E para facilitar a
 vida, está disponível a função carteira, que salva quantas e quais moedas você tem e já
 calcula o valor total em USD e em BRL de suas moedas!
+
 
 ---
 ### Comandos válidos:
