@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-# PyBCoin.py
+# PyBCoin.py        
 # Github:@WeDias
 
 # MIT License
@@ -169,8 +169,9 @@ def buscar_dados(criptomoeda: str) -> dict:
             dados = BeautifulSoup(resposta.text, 'html.parser')
             # ----------------------------------------------------------------------------------------------------------
             # rank de mercado da criptomoeda
-            rank_mercado = dados.find(class_='cmc-label cmc-label--success sc-13jrx81-0 FVuRP').get_text()
-            rank_mercado = int(rank_mercado.replace('Rank ', ''))
+            rank_mercado = dados.find('div', class_='cmc-details-panel-about__table').find_all_next('div', limit=12)
+            rank_mercado = rank_mercado[-1].get_text()
+            rank_mercado = int(rank_mercado.replace('#', ''))
 
             # ----------------------------------------------------------------------------------------------------------
             # preço em dólar
@@ -291,6 +292,7 @@ def main() -> None:
     main(): Serve para testar as funções criadas sem interferir na importação das funções para outros arquivos
     :return: None
     """
+    print(buscar_dados('bitcoin'))
     pass
 
 
