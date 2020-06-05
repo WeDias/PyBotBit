@@ -169,9 +169,9 @@ def buscar_dados(criptomoeda: str) -> dict:
             dados = BeautifulSoup(resposta.text, 'html.parser')
             # ----------------------------------------------------------------------------------------------------------
             # rank de mercado da criptomoeda
-            rank_mercado = dados.find('div', class_='cmc-details-panel-about__table').find_all_next('div', limit=12)
-            rank_mercado = rank_mercado[-1].get_text()
-            rank_mercado = int(rank_mercado.replace('#', ''))
+            rank_mercado = dados.find('tbody', class_='cmc-details-panel-about__table').find_all_next('tr', limit=3)
+            rank_mercado = rank_mercado[-1].find('td').get_text()[1:]
+            rank_mercado = int(rank_mercado)
 
             # ----------------------------------------------------------------------------------------------------------
             # preço em dólar
@@ -195,10 +195,8 @@ def buscar_dados(criptomoeda: str) -> dict:
 
             # ----------------------------------------------------------------------------------------------------------
             # market cap
-            market_cap = str(
-                dados.find('ul',
-                           class_='cmc-details-panel-stats k1ayrc-0 OZKKF').find_next('span').get_text())
-
+            market_cap = dados.find('tbody', class_='cmc-details-panel-about__table').find_all_next('tr', limit=4)
+            market_cap = market_cap[-1].find('td').get_text()[1:]
             market_cap = int(remover_virgulas(market_cap)[1:-4])
 
             # ----------------------------------------------------------------------------------------------------------
